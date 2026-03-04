@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- acquisition arguments -->
+	<arg name="plugin" 	default='rosneuro::EGDDevice'/>
+	<!-- antNeuro32 -->
+	<!-- <arg name="devarg"  	default="eego|EEG_MASK|0x001FFF600779CF25"/>  -->
+	<!-- antNeuro16 -->
+	<arg name="devarg" 		default='eego|EEG_MASK|0x0001B7000231C620'/>
+	<!-- GDF -->
+	<!-- <arg name="devarg"  	default='/home/mtld/mtld_workspace/gdfs/temp/c7.20231211.161812.cal.gdf'/> -->
+	<arg name="framerate" 	default='16'/>
+	<arg name="samplerate" default='512'/>	
+	
+   
+	<!-- acquisition node -->
+	<node name="acquisition" pkg="rosneuro_acquisition" type="acquisition" output="screen">
+  	  	<param name="~plugin"		value="$(arg plugin)"/>
+  	  	<param name="~devarg"		value="$(arg devarg)"/>
+  	  	<param name="~samplerate" 	value="$(arg samplerate)"/>
+  	  	<param name="~framerate"  	value="$(arg framerate)"/>
+  	</node>
+  	
+  	<node name="visualizer" pkg="rosneuro_visualizer" type="neuroviz" >
+	</node>
+
+
+</launch>

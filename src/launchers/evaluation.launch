@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- acquisition arguments -->
+    <arg name="plugin"  	default='rosneuro::EGDDevice'/> 
+	<!-- antNeuro16 -->
+	<arg name="devarg" 		default='eego|EEG_MASK|0x0001B7000231C620'/>
+	<!-- GDF -->
+	<arg name="framerate" 	default='16'/>
+	<arg name="samplerate"  default='512'/>
+	
+	
+	<!-- recorder arguments -->
+	<arg name="autostart" 	default='true'/>
+	<arg name="filepath" 	default=''/>    <!-- ########################################## -->
+	<arg name="subject"     default='i4'/>  <!-- ########################################## -->
+	<arg name="task" 		default="mi_bfbh"/>
+	<arg name="extra"/>
+
+	
+	
+	<!-- protocol parameters -->
+	<rosparam param="protocol/subject"  	subst_value="True">$(arg subject)</rosparam>
+	<rosparam param="protocol/modality"		subst_value="True">$(arg modality)</rosparam>
+	<rosparam param="protocol/task"  		subst_value="True">$(arg task)</rosparam>
+	<!-- <rosparam param="protocol/extra"		subst_value="True">$(arg extra)</rosparam> -->
+
+	<remap from="/protocol/subject"		to="protocol/subject"/>
+	<remap from="/protocol/modality"	to="protocol/modality"/>
+	<remap from="/protocol/task"		to="protocol/task"/>
+	<!-- <remap from="/protocol/extra"		to="protocol/extra"/> -->
+
+	
+	<!-- processing arguments -->
+	<arg name="lap_path"	default=''/> <!-- ########################################## -->
+	<arg name="decoder_path" default=''/> <!-- ########################################## -->
+	<arg name="n_channels" default='16'/>
+	<arg name="classifier_type" default='fgmdm'/>	
+	
+	
+	<!-- integrator arguments -->
+	<!-- <arg name="thresholds_feeedback"/> -->
+	<arg name="alpha" default='0.98'  />
+	<arg name="rejection" default='0.5'	/>
+	<arg name="thresholds_integrator" default='[0.65 0.65]'/> 
+	<arg name="plugin_integrator" default='rosneuro::integrator::Buffer'/>
+	<arg name="buffer_size" default='80'/>
+	
+	
+	<!-- neurowheel arguments-->
+	<arg name="thresholds" 		default='[1, 1]'/>
+	<arg name="show_on_rest" 	default='True'/>
+	<arg name="classes"      	default='[771, 773, 783]'/>
+	<arg name="trials" 			default='[7, 7, 4]'/>
+	<arg name='timestart_wheel' default='25000'/> <!-- [ms] -->
+	
+	
+	 
+	<!-- ________________________________________________________________________________________________________ -->
+
+   
+	<!-- acquisition node -->
+	<node name="acquisition" pkg="rosneuro_acquisition" type="acquisition">
+  	  	<param name="~plugin"		value="$(arg plugin)"/>
+  	  	<param name="~devarg"		value="$(arg devarg)"/>
+  	  	<param name="~framerate" 	value="$(arg framerate)"/>
+  	  	<param name="~samplerate" 	value="$(arg samplerate)"/>
+  	</node>
+
+	
+	<?ignore
+	<node name="smrbci" pkg="rosneuro_processing" type="test_smrbci">
+		<param name="~lap_path" 	value="$(arg lap_path)"/>
+		<param name="~decoder_path" 	value="$(arg decoder_path)"/>
+		<param name="~n_channels" 	value="$(arg n_channels)"/>
+		
+		<remap from='smrbci/neuroprediction' to='smr/neuroprediction'/>
+		<remap from='neurodata_filtered' to='neurodata'/>
+	</node>
+	?>
+
+	<!-- laplacian node -->
+	<node name="laplacian" pkg="laplacian_applier" type="node.py" output="screen">
+		<param name="~lap_path" 	value="$(arg lap_path)"/>
+	</node>
+
+	<!-- BP node -->
+	<rosparam command="load" file="/home/mtld/mtld_workspace/src/config/ChainCfgBP.yaml" />
+	<node name="filterchain_node" pkg="rosneuro_filters" type="filterchain_node" output="screen" >
+		<param name="configname" value="ChainCfgTest" />
+	</node>	
+
+	<!-- buffer node -->
+    <node name="buffer" pkg="riemann_classifier" type="buffer.py" output="screen">
+		<param name="~samplerate" 		value="$(arg samplerate)"/>
+		<param name="~n_channels" 		value="$(arg n_channels)"/>
+		<param name="~classifier_type" 	value="$(arg classifier_type)"/>
+	</node>
+
+	<!-- logpower node -->
+    <node name="logBP" pkg="riemann_classifier" type="logpower.py" output="screen">
+		<param name="~samplerate" 		value="$(arg samplerate)"/>
+		<param name="~n_channels" 		value="$(arg n_channels)"/>
+		<param name="~classifier_type" 	value="$(arg classifier_type)"/>
+	</node>
+	
+	<!-- classifier node -->
+	<node name="riemann_classifier" pkg="riemann_classifier" type="riemann_node.py" output="screen">
+		<param name="~decoder_path" 	value="$(arg decoder_path)"/>
+		<param name="~n_channels" 		value="$(arg n_channels)"/>
+		<param name="~subject" 			value="$(arg subject)"/>
+		<param name="~classifier_type" 	value="$(arg classifier_type)"/>
+	</node>
+  	
+ 	<!-- recorder node -->
+	<node name="recorder" pkg="rosneuro_recorder" type="recorder" >
+		<param name="~autostart"			value="$(arg autostart)"/>
+		<param name="~filepath" 			value="$(arg filepath)"/>
+		<param name="/protocol/subject" 	value="$(arg subject)"/>
+		<param name="/protocol/modality" 	value="$(arg modality)"/>
+		<param name="/protocol/task" 		value="$(arg task)"/>
+
+	</node>
+
+
+	<node name="integrator" pkg="rosneuro_integrator" type="integrator" output="screen" >
+		<param name="plugin" 	  			value="$(arg plugin_integrator)"/>
+		
+		<param name="n_classes" 	  		value="2"/>
+		<param name="buffer_size"			value="$(arg buffer_size)"/>
+		<rosparam param="init_val" 			subst_value="true">[0.5,0.5]</rosparam>
+
+		<!-- <param name="alpha" 	  		value="$(arg alpha)"/>
+		<param name="rejection"			value="$(arg rejection)"/>
+		<rosparam param="thresholds" 	subst_value="true">$(arg thresholds_integrator)</rosparam> -->
+
+		<remap from='integrated' to='integrator/neuroprediction'/>
+		<remap from='smr/neuroprediction' to='riemann_output'/>
+	</node> 
+  	
+  	<!-- neurowheel node -->
+	<node name="trainingwheel" pkg="rosneuro_feedback_wheel" type="trainingwheel"  output="screen">
+		<rosparam param="thresholds" 		subst_value="True">$(arg thresholds)</rosparam>
+		<rosparam param="modality" 			subst_value="True">$(arg modality)</rosparam>
+		<rosparam param="classes" 			subst_value="True">$(arg classes)</rosparam>
+		<rosparam param="trials" 			subst_value="True">$(arg trials)</rosparam>
+		<rosparam param="show_on_rest" 		subst_value="True">$(arg show_on_rest)</rosparam>
+		<rosparam param="duration/begin" 	subst_value="True">$(arg timestart_wheel)</rosparam>
+	</node>
+
+	<node pkg="rqt_reconfigure" type="rqt_reconfigure" name="my_rqt_reconfigure"/>
+
+
+
+</launch>

@@ -1,0 +1,16 @@
+ChainCfgTest:
+    - name: butterworth-highpass
+      type: rosneuro_filters/ButterworthFilterFloat
+      params: 
+        samplerate: 512
+        type: highpass
+        order: 2
+        cutoff: 7
+    - name: butterworth-lowpass
+      type: rosneuro_filters/ButterworthFilterFloat
+      params: 
+        samplerate: 512
+        type: lowpass
+        order: 2
+        cutoff: 23
+

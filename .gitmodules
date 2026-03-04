@@ -1,0 +1,9 @@
+[submodule "fgmdm_riemann"]
+	path = fgmdm_riemann
+	url = git@github.com:A13ssi0/fgmdm_riemann.git
+[submodule "src/py_utils"]
+	path = src/py_utils
+	url = git@github.com:A13ssi0/py_utils.git
+[submodule "src/riemann_utils"]
+	path = src/riemann_utils
+	url = git@github.com:A13ssi0/riemann_utils.git

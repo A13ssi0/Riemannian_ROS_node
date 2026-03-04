@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- acquistion arguments -->
+    <arg name="plugin"  	default='rosneuro::EGDDevice'/>
+	<arg name="devarg" 		default='eego|EEG_MASK|0x0001B7000231C620'/>
+	<arg name="framerate" 	default='16'/>
+	<arg name="samplerate"  default='512'/>
+
+	<!-- recorder arguments -->
+	<arg name="autostart" 	default='true'/>
+	<arg name="filepath" 	default=''/>   <!-- ########################################## -->
+	<arg name="subject" 	default='i4'/> <!-- ########################################## -->
+	<arg name="modality" 	value='calibration'/>
+	<arg name="task" 		default="mi_bfbh"/>
+	<arg name="extra"/>
+
+	<!-- protocol parameters -->
+	<rosparam param="protocol/subject"  	subst_value="True">$(arg subject)</rosparam>
+	<rosparam param="protocol/modality"		subst_value="True">$(arg modality)</rosparam>
+	<rosparam param="protocol/task"  		subst_value="True">$(arg task)</rosparam>
+	<!-- <rosparam param="protocol/extra"		subst_value="True">$(arg extra)</rosparam> -->
+
+	<remap from="/protocol/subject"		to="protocol/subject"/>
+	<remap from="/protocol/modality"	to="protocol/modality"/>
+	<remap from="/protocol/task"		to="protocol/task"/>
+	<!-- <remap from="/protocol/extra"		to="protocol/extra"/> -->
+
+	<!-- neurowheel arguments-->
+	<arg name="thresholds" 		default='[1.0, 1.0]'/>
+	<arg name="show_on_rest" 	default='True'/>
+	<arg name="classes"      	default='[771, 773, 783]'/>
+	<arg name="trials" 			default='[9, 9, 9]'/>	<!-- ############################################################################# -->
+	<arg name='timestart_wheel' default='25000'/> <!-- [ms] -->
+
+    <!-- acquisition node -->
+    <node pkg="rosneuro_acquisition" type="acquisition" name="acquisition">
+  	  	<param name="~plugin"		value="$(arg plugin)"/>
+  	  	<param name="~devarg"		value="$(arg devarg)"/>
+  	  	<param name="~samplerate" 	value="$(arg samplerate)"/>
+  	  	<param name="~framerate"  	value="$(arg framerate)"/>
+    </node>
+
+	<!-- recorder node -->
+	<node name="recorder" pkg="rosneuro_recorder" type="recorder" >
+		<param name="~autostart"			value="$(arg autostart)"/>
+		<param name="~filepath" 			value="$(arg filepath)"/>
+		<param name="/protocol/subject" 	value="$(arg subject)"/>
+		<param name="/protocol/modality" 	value="$(arg modality)"/>
+		<param name="/protocol/task" 		value="$(arg task)"/>
+
+	</node>
+
+	<!-- neurowheel node -->
+	<node name="trainingwheel" pkg="rosneuro_feedback_wheel" type="trainingwheel"  output="screen">
+		<rosparam param="thresholds" 		subst_value="True">$(arg thresholds)</rosparam>
+		<rosparam param="modality" 			subst_value="True">$(arg modality)</rosparam>
+		<rosparam param="classes" 			subst_value="True">$(arg classes)</rosparam>
+		<rosparam param="trials" 			subst_value="True">$(arg trials)</rosparam>
+		<rosparam param="show_on_rest" 		subst_value="True">$(arg show_on_rest)</rosparam>
+		<rosparam param="duration/begin" 	subst_value="True">$(arg timestart_wheel)</rosparam>
+	</node>
+
+
+</launch>
