@@ -22,7 +22,7 @@ def main(filter_order=2, windowsLength=1, applyLaplacian=True, classes=None):
 
     wantedChannels = ['Fz', 'C3', 'Cz', 'C4', 'Pz', 'PO7', 'Oz', 'PO8']
 
-    rejectionThreshold = 0.51
+    rejectionThreshold = 0.50
 
     applyLog = False
     doRecenter = False
@@ -60,8 +60,9 @@ def main(filter_order=2, windowsLength=1, applyLaplacian=True, classes=None):
         pathLaplacian = None
         print(' - Applying Laplacian')  
 
-        if h['device'].startswith('NA'):    pathLaplacian = os.path.join(genPath, 'lapMask16Nautilus.mat')
-        elif h['device'].startswith('UN'):  pathLaplacian = os.path.join(genPath, 'lapMask8Unicorn.mat')
+        if 'device' not in h:                 pathLaplacian = os.path.join(genPath, 'lapMask16.mat') 
+        elif h['device'].startswith('NA'):    pathLaplacian = os.path.join(genPath, 'lapMask16Nautilus.mat')
+        elif h['device'].startswith('UN'):    pathLaplacian = os.path.join(genPath, 'lapMask8Unicorn.mat')
         elif h['device'].startswith('test'):  pathLaplacian = ''
 
 
@@ -85,16 +86,12 @@ def main(filter_order=2, windowsLength=1, applyLaplacian=True, classes=None):
 
 
 
-    # ## -----------------------------------------------------------------------------    
-    wantedChannels = ['Fz', 'C3', 'Cz', 'C4', 'Pz', 'PO7', 'Oz', 'PO8']
-    # wantedChannels = ['Fz', 'C3', 'Cz', 'C4', 'Pz', 'O1', 'Oz', 'O2']
+    # ## -----------------------------------------------------------------------------
     channelMask = get_channelsMask(wantedChannels, channels)
     filt_signal = filt_signal[:, :, channelMask]
-    # channels = ['Fz', 'C3', 'Cz', 'C4', 'Pz', 'PO7', 'Oz', 'PO8']
 
 
     # ## ----------------------------------------------------------------------------- Covariances
-    # [covs, cov_events] = get_trNorm_covariance_matrix(filt_signal, events_dataFrame, windowsLength, windowsShift, fs)
     print(f' - Computing covariance matrices with normalization method: {windowsShift}')
     [covs, cov_events] = get_covariance_matrix_normalized(filt_signal, events_dataFrame, windowsLength, windowsShift, fs, normalizationMethod=normalizationMethod)
     labelVector = get_EventsVector_onFeedback(cov_events, covs.shape[1], classes)
@@ -179,7 +176,8 @@ def main(filter_order=2, windowsLength=1, applyLaplacian=True, classes=None):
         'rejectionThreshold': rejectionThreshold,
         'applyLog': applyLog,
         'logWindowLength': logWindowLength,
-        'normalizationMethod': normalizationMethod
+        'normalizationMethod': normalizationMethod,
+        'channelMask': channelMask
     }
 
     now = datetime.now().strftime("%Y%m%d.%H%M")

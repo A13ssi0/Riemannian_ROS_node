@@ -96,13 +96,6 @@
 		<param name="~n_channels" 		value="$(arg n_channels)"/>
 		<param name="~classifier_type" 	value="$(arg classifier_type)"/>
 	</node>
-
-	<!-- logpower node -->
-    <node name="logBP" pkg="riemann_classifier" type="logpower.py" output="screen">
-		<param name="~samplerate" 		value="$(arg samplerate)"/>
-		<param name="~n_channels" 		value="$(arg n_channels)"/>
-		<param name="~classifier_type" 	value="$(arg classifier_type)"/>
-	</node>
 	
 	<!-- classifier node -->
 	<node name="riemann_classifier" pkg="riemann_classifier" type="riemann_node.py" output="screen">

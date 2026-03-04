@@ -2,7 +2,6 @@
 
 import numpy as np
 import rospy
-import utils as utils
 from rosneuro_msgs.msg  import NeuroOutput
 from std_msgs.msg import Float64MultiArray
 
@@ -31,10 +30,7 @@ if __name__ == '__main__':
     n_channels = rospy.get_param('~n_channels')
     classifier_type = rospy.get_param('~classifier_type')
 
-    if classifier_type=='fgmdm':
-        buffer_size = fs
-    elif classifier_type=='fgmdm_logBP':
-        buffer_size = fs * 2
+    buffer_size = fs
         
     buffered_eeg = np.empty([buffer_size, n_channels])
     buffered_eeg.fill(np.nan)
